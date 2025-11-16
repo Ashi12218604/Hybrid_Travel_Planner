@@ -154,3 +154,79 @@ if st.button("Recommend"):
     except Exception as e:
         st.error(f"Error: {e}")
 
+## Ridge Regression:
+# Filter rows with ratings
+df_reg = df_feat.dropna(subset=['ExperienceRating']).reset_index(drop=True)
+print("Regression rows:", df_reg.shape[0])
+if df_reg.shape[0] < 10:
+    print("Few rating rows. Consider merging df_reviews to get more ratings (next cell).")
+else:
+    # Build simple X matrix (tabular one-hot + dest tfidf)
+    def build_reg_X(df_local):
+        # numeric
+        num = df_local[['Popularity','NumChildren']].fillna(0).astype(float)
+        # cat -> one-hot
+        cat = pd.get_dummies(df_local[['Gender','DestType','BestTimeToVisit']].fillna('Unknown').astype(str), dummy_na=False)
+        tab = np.hstack([num.values, cat.values])
+        # dest vectors
+        dest_vecs = []
+        for did in df_local['DestinationID']:
+            di = dest_id_to_idx.get(int(did), None)
+            if di is None:
+                dest_vecs.append(np.zeros(dest_tfidf.shape[1]))
+            else:
+                dest_vecs.append(dest_tfidf[di].toarray().ravel())
+        dest_vecs = np.vstack(dest_vecs)
+        Xfull = np.hstack([tab, dest_vecs])
+        return Xfull
+    Xr = build_reg_X(df_reg)
+    yr = df_reg['ExperienceRating'].astype(float).values
+    # Use distinct variable names for regression test set and predictions
+    Xtr_reg, Xte_reg, ytr_reg, yte_reg = train_test_split(Xr, yr, test_size=0.2, random_state=RANDOM_SEED)
+    ridge = Ridge(alpha=1.0, random_state=RANDOM_SEED)
+    ridge.fit(Xtr_reg, ytr_reg)
+    preds_reg = ridge.predict(Xte_reg)
+    print("Regression RMSE:", np.sqrt(mean_squared_error(yte_reg, preds_reg)))
+    print("Regression R2:", r2_score(yte_reg, preds_reg))
+    joblib.dump(ridge, "ridge_experience_model.joblib")
+    print("Saved ridge_experience_model.joblib")
+
+# Ensure ridge_model always exists — trained model or fallback
+try:
+    ridge_model = joblib.load("ridge_experience_model.joblib")
+    print("Loaded trained ridge model.")
+except:
+    print("No trained ridge model found — using fallback popularity-based model.")
+
+    class FallbackRatingModel:
+        def predict(self, X):
+            return np.ones(X.shape[0]) * 3.0  # constant avg rating
+
+    ridge_model = FallbackRatingModel()
+    joblib.dump(ridge_model, "ridge_experience_model.joblib")
+
+print("ridge_model is defined.")
+
+if df_reg.shape[0] < 10:
+    # Use reviews as labeled ratings (reviews: DestinationID, UserID, Rating)
+    if set(['UserID','DestinationID','Rating']).issubset(df_reviews.columns):
+        df_rev_merged = df_reviews.merge(df_dest, on='DestinationID', how='left').merge(df_users, on='UserID', how='left')
+        df_rev_feat = make_features(df_rev_merged, df_users, df_dest)
+        df_reg2 = df_rev_feat.dropna(subset=['ExperienceRating']).reset_index(drop=True)
+        print("Augmented rows from reviews:", df_reg2.shape[0])
+        if df_reg2.shape[0] >= 10:
+            Xr = build_reg_X(df_reg2)
+            yr = df_reg2['ExperienceRating'].astype(float).values
+            Xtr, Xte, ytr, yte = train_test_split(Xr, yr, test_size=0.2, random_state=RANDOM_SEED)
+            ridge = Ridge(alpha=1.0, random_state=RANDOM_SEED)
+            ridge.fit(Xtr, ytr)
+            preds = ridge.predict(Xte)
+            print("Regression RMSE:", np.sqrt(mean_squared_error(yte, preds)))
+            print("Regression R2:", r2_score(yte, preds))
+            joblib.dump(ridge, "ridge_experience_model.joblib")
+            print("Saved ridge_experience_model.joblib")
+        else:
+            print("Still not enough rating rows. Using popularity-based fallback for predicted rating in recommender.")
+    else:
+        print("Reviews file lacks Rating or required columns. Using popularity-based fallback for recommender.")
+
