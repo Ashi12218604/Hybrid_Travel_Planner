@@ -1,224 +1,193 @@
-🌍 Hybrid Travel Planner Recommendation System
 
-Live Demo: https://hybridtravelplanner.streamlit.app/
+# **Hybrid Travel Planner – Machine Learning Recommendation System**
 
-📌 Overview
+### **Live Demo:** [https://hybridtravelplanner.streamlit.app/](https://hybridtravelplanner.streamlit.app/)
 
-Travel planning is complex — users have unique interests, family needs, and varied travel histories.
-This project builds an AI-powered Hybrid Travel Recommendation System that combines:
+---
 
-✔ Machine Learning (Regression + Classification)
-✔ Natural Language Processing (TF-IDF + Content Similarity)
-✔ User demographics & preferences
-✔ Destination metadata
+## **1. Overview**
 
-The final system recommends personalized travel destinations for each user based on:
+This project implements a **Hybrid Travel Recommendation System** that generates personalized destination suggestions for users by combining:
 
-predicted satisfaction rating
+* **Machine Learning models**
+* **Natural Language Processing**
+* **User preferences & demographics**
+* **Destination metadata**
 
-probability of visiting the destination
+The system predicts:
 
-preference alignment using NLP
+1. How much a user will **like** a destination (regression)
+2. How likely they are to **visit** the destination (classification)
+3. How strongly a destination’s description matches the user’s **preferences** (NLP similarity)
 
-destination popularity and attributes
+These signals are combined using a weighted hybrid scoring framework and deployed as an interactive **Streamlit web app**.
 
-All results are integrated into a single HybridScore and displayed through a clean Streamlit web app.
+---
 
-🚀 Key Features
-🔹 1. Multi-Model Hybrid Recommendation
+## **2. Features**
 
-The system integrates three different ML modules:
+### **Hybrid Recommendation Engine**
 
-A. Rating Prediction — Ridge Regression
+* **Ridge Regression** → Predicts user experience rating
+* **Random Forest Classifier** → Predicts visit probability
+* **TF-IDF + Cosine Similarity** → Measures alignment between user preference text and destination descriptions
+* **HybridScore** combines all three for final ranking
 
-Predicts how much a user will like a destination based on demographics, destination attributes, and TF-IDF features.
+### **Interactive Web Interface**
 
-B. Visit Probability — Random Forest Classifier
+* Built with **Streamlit**
+* Select any user
+* Choose number of recommendations
+* View top destinations with predicted rating, visit probability, similarity score, and hybrid ranking
 
-Estimates how likely a user is to visit a destination using popularity, user type, and similarity features.
+### **End-to-End ML Pipeline**
 
-C. NLP-Based Content Similarity — TF-IDF + Cosine Similarity
+* Dataset cleaning & preprocessing
+* Feature engineering
+* Model training, evaluation, saving
+* Hybrid score computation
+* Deployment
 
-Matches user textual preferences (Beaches, Nature, Adventure, Historical…) with destination descriptions.
+---
 
-These three signals combine to produce the final HybridScore.
+## **3. Datasets**
 
-🔹 2. End-to-End ML Pipeline
+This project uses multiple CSV datasets:
 
-The project includes:
+| File                                     | Description                                                               |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| `Final_Updated_Expanded_Users.csv`       | User demographics, preferences, and family information                    |
+| `Expanded_Destinations.csv`              | Destination metadata including type, popularity, and seasonal suitability |
+| `Final_Updated_Expanded_UserHistory.csv` | Travel history & experience ratings                                       |
+| `Final_Updated_Expanded_Reviews.csv`     | Text reviews and ratings of destinations                                  |
 
-dataset preprocessing
+Combined, they form a rich feature space for modeling user behavior.
 
-feature engineering
+---
 
-one-hot encoding
+## **4. Machine Learning Components**
 
-TF-IDF vectorization
+### **4.1 Regression Model – Ridge Regression**
 
-handling missing values
+Used to estimate **ExperienceRating** for user–destination pairs.
 
-model training, evaluation, saving (joblib)
+Includes concepts from:
 
-hybrid scoring
+* Regularization (L2)
+* Coefficient estimation
+* Cross-validation
+* Handling multicollinearity
 
-This mirrors the workflow used in real-world recommender systems.
+The regression model was trained on a **34-feature input vector**, combining:
 
-🔹 3. Modern Streamlit UI
+* Numeric features
+* One-hot encoded categorical features
+* Destination TF-IDF vectors
 
-The deployed app provides:
+### **4.2 Classification Model – Random Forest**
 
-user selection
+Used to predict the **Visit Probability** of a user.
 
-adjustable number of recommendations
+Covers:
 
-HybridScore ranking
+* Decision trees
+* Ensemble learning
+* Bagging
+* Impurity measures (Gini)
+* Feature importance
 
-detailed destination insights
+### **4.3 NLP Model – TF-IDF Similarity**
 
-fully responsive design
+Used to compute:
 
-Live App: https://hybridtravelplanner.streamlit.app/
+* User preference → Destination similarity
+* Cosine similarity between text embeddings
 
-📂 Project Structure
-📁 HybridTravelPlanner
+---
+
+## **5. Hybrid Recommendation Formula**
+
+The final score used to rank destinations:
+
+```
+HybridScore = 0.4 × PredictedRating  
+            + 0.3 × VisitProbability  
+            + 0.3 × ContentSimilarity
+```
+
+Each component is normalized to maintain equal scale.
+
+---
+
+## **6. Project Structure**
+
+```
+📁 Hybrid Travel Planner
 │
-├── app.py                               # Streamlit web app
-├── ridge_experience_model.joblib        # Saved regression model
-├── visit_probability_model.joblib       # Saved classification model
+├── app.py
+├── ridge_experience_model.joblib
+├── visit_probability_model.joblib
 │
-├── Final_Updated_Expanded_Users.csv     # User data
+├── Final_Updated_Expanded_Users.csv
 ├── Final_Updated_Expanded_UserHistory.csv
 ├── Final_Updated_Expanded_Reviews.csv
-├── Expanded_Destinations.csv            # Destination dataset
+├── Expanded_Destinations.csv
 │
-└── README.md                            # Project documentation
+└── README.md
+```
 
-📊 Algorithms & Techniques Used
-🧠 Machine Learning
+---
 
-Ridge Regression
+## **7. Deployment**
 
-Random Forest Classifier
+The application is deployed using **Streamlit Cloud**.
 
-Hyperparameter tuning
+You can access the live application here:
+🔗 **[https://hybridtravelplanner.streamlit.app/](https://hybridtravelplanner.streamlit.app/)**
 
-Train-test split
+To run it locally:
 
-Feature importance analysis
+### **Install dependencies**
 
-Regularization (L2)
-
-Bias-variance considerations
-
-📝 Natural Language Processing
-
-TF-IDF Vectorizer
-
-Cosine similarity
-
-Text normalization
-
-📦 Data Engineering
-
-One-hot encoding
-
-Merging multi-table datasets
-
-Handling numerical + categorical features
-
-Vector concatenation (34-feature regression input)
-
-💡 Hybrid Recommendation Strategy
-
-Final score =
-
-HybridScore = 0.4 * PredRating  
-              + 0.3 * VisitProbability  
-              + 0.3 * ContentSimilarity
-
-
-Values are normalized for fairness.
-
-📄 Dataset Summary
-Users Dataset
-
-User demographics
-
-Gender
-
-Travel preferences
-
-Number of children
-
-Destinations Dataset
-
-DestinationID
-
-Name
-
-Type (Beach, Nature, Historical, etc.)
-
-Best time to visit
-
-Popularity score
-
-Travel History
-
-Past destinations visited
-
-Ratings
-
-Useful for modeling user behavior
-
-Reviews Dataset
-
-Additional rating labels
-
-Helps overcome sparse-rating problem
-
-📊 Visual Insights Included
-
-The notebook includes multiple visualizations:
-
-Distribution of destination popularity
-
-User preference breakdown
-
-TF-IDF similarity heatmaps
-
-Random Forest feature importance
-
-Predicted rating distribution
-
-These graphs improve interpretability and project presentation.
-
-▶️ How to Run Locally
-1. Install dependencies
+```
 pip install -r requirements.txt
+```
 
-2. Run the app
+### **Run the app**
+
+```
 streamlit run app.py
+```
+
+---
+
+## **8. Visualizations**
+
+The notebook includes key graphs:
+
+* Distribution of destination popularity
+* User preference frequency
+* Random Forest feature importance
+* Similarity heatmaps
+* Predicted rating distributions
+
+These help validate model behavior and explain the system.
+
+---
+
+## **9. Conclusion**
+
+This project demonstrates how multiple ML paradigms—regression, classification, NLP, and ensemble learning—can be integrated to build a real-world hybrid recommender system.
+The system is modular, extensible, and reflects industry practices in travel recommendation engines.
+
+It serves as a strong applied machine learning project showcasing:
+
+* dataset handling
+* supervised model training
+* NLP engineering
+* end-to-end pipeline building
+* web-based deployment
+
+---
 
 
-The app will launch on http://localhost:8501/.
-
-🌐 Deployment
-
-The project is deployed using Streamlit Cloud, enabling public access.
-
-Live Demo: https://hybridtravelplanner.streamlit.app/
-
-🏁 Conclusion
-
-This project demonstrates how Machine Learning, NLP, and User Modelling can come together to build a practical, real-world recommendation system.
-The hybrid approach ensures:
-
-better personalization
-
-higher accuracy
-
-transparent scoring
-
-real-time recommendation generation
-
-It serves as a strong portfolio project for roles in Data Science, Machine Learning, AI Engineering, and Data Analytics.
