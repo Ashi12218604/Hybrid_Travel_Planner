@@ -50,7 +50,7 @@ dest_texts = (
     df_dest["State"].fillna("")
 ).astype(str)
 
-user_pref_texts = df_users.get("Preference", pd.Series([""])).astype(str)
+user_pref_texts = df_users.get("Preferences", pd.Series([""])).astype(str)
 
 tfidf = TfidfVectorizer(max_features=500)
 tfidf.fit(pd.concat([dest_texts, user_pref_texts], ignore_index=True))
@@ -111,11 +111,11 @@ def recommend_for_user(user_id, top_n=10):
         raise ValueError("Invalid User ID")
 
     gender = user["Gender"].iloc[0]
-    preference = user["Preference"].iloc[0]
+    preferences = user["Preferences"].iloc[0]
     num_children = user["NumChildren"].iloc[0]
 
     # content similarity
-    user_vec = tfidf.transform([f"{preference} {gender}"])
+    user_vec = tfidf.transform([f"{preferences} {gender}"])
     content_sim = cosine_similarity(user_vec, dest_tfidf).ravel()
 
     # visit probability
